@@ -1,0 +1,435 @@
+Image Gallery Control using Xamarin Form
+
+Breif: Implementation of Custom gallery control for xamarin form explained in a simple steps
+
+[Image]
+
+Description: If you have a plan to display image in gallery or in grid format for your Xamarin.Form application then you are in right place.
+You should be able to do so in next 15-20 minutes :). This implements targets both android and iOS. Now quickly go through with steps
+
+Step1: Create Custom control class for Gridview with some basic properties like MaxColumn, tile height, source, tapped event trigger and data template
+as follows,
+
+using System;
+using System.Collections;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows.Input;
+using Xamarin.Forms;
+
+namespace CustomGallery
+{ 
+
+    /// <summary>
+    /// GridView for showing control templates in a tile-like layout
+         /// </summary>
+    public class GridView : Grid
+    {
+        public static readonly BindableProperty ItemsSourceProperty = BindableProperty.Create(nameof(ItemsSource), typeof(IList), typeof(GridView), default(IList), BindingMode.TwoWay);
+        public static readonly BindableProperty ItemTappedCommandProperty = BindableProperty.Create(nameof(ItemTappedCommand), typeof(ICommand), typeof(GridView), null);
+        public static readonly BindableProperty ItemTemplateProperty = BindableProperty.Create(nameof(ItemTemplate), typeof(DataTemplate), typeof(GridView), default(DataTemplate));
+        public static readonly BindableProperty MaxColumnsProperty = BindableProperty.Create(nameof(MaxColumns), typeof(int), typeof(GridView), 2);
+        public static readonly BindableProperty TileHeightProperty = BindableProperty.Create(nameof(TileHeight), typeof(float), typeof(GridView), 220f);//adjusted here reuired height
+
+        public GridView()
+        {
+            PropertyChanged += GridView_PropertyChanged;
+            PropertyChanging += GridView_PropertyChanging;
+        }
+
+        public IList ItemsSource
+        {
+            get { return (IList)GetValue(ItemsSourceProperty); }
+            set { SetValue(ItemsSourceProperty, value); }
+        }
+
+        public ICommand ItemTappedCommand
+        {
+            get { return (ICommand)GetValue(ItemTappedCommandProperty); }
+            set { SetValue(ItemTappedCommandProperty, value); }
+        }
+
+        public DataTemplate ItemTemplate
+        {
+            get { return (DataTemplate)GetValue(ItemTemplateProperty); }
+            set { SetValue(ItemTemplateProperty, value); }
+        }
+
+        public int MaxColumns
+        {
+            get { return (int)GetValue(MaxColumnsProperty); }
+            set { SetValue(MaxColumnsProperty, value); }
+        }
+
+        public float TileHeight
+        {
+            get { return (float)GetValue(TileHeightProperty); }
+            set { SetValue(TileHeightProperty, value); }
+        }
+
+        private void BuildColumns()
+        {
+            ColumnDefinitions.Clear();
+            for (var i = 0; i < MaxColumns; i++)
+            {
+                ColumnDefinitions.Add(new ColumnDefinition());
+            }
+        }
+
+        private View BuildTile(object item1)
+        {
+            var template = ItemTemplate.CreateContent() as View;
+            template.BindingContext = item1;
+
+            if (ItemTappedCommand != null)
+            {
+                var tapGestureRecognizer = new TapGestureRecognizer
+                {
+                    Command = ItemTappedCommand,
+                    CommandParameter = item1
+                };
+
+                template.GestureRecognizers.Add(tapGestureRecognizer);
+            }
+            return template;
+        }
+
+        private void BuildTiles()
+        {
+            // Wipe out the previous row & Column definitions if they're there.
+            if (RowDefinitions.Any())
+            {
+                RowDefinitions.Clear();
+            }
+
+            BuildColumns();
+
+            Children.Clear();
+
+            var tiles = ItemsSource;
+
+            if (tiles != null)
+            {
+                var numberOfRows = Math.Ceiling(tiles.Count / (float)MaxColumns);
+                for (var i = 0; i < numberOfRows; i++)
+                {
+                    RowDefinitions.Add(new RowDefinition { Height = 200f });
+                }
+
+                for (var index = 0; index < tiles.Count; index++)
+                {
+                    var column = index % MaxColumns;
+                    var row = (int)Math.Floor(index / (float)MaxColumns);
+
+                    var tile = BuildTile(tiles[index]);
+
+                    Children.Add(tile, column, row);
+                }
+            }
+        }
+
+        private void GridView_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == ItemsSourceProperty.PropertyName)
+            {
+                var items = ItemsSource as INotifyCollectionChanged;
+                if (items != null)
+                    items.CollectionChanged += ItemsCollectionChanged;
+
+                BuildTiles();
+            }
+
+            if (e.PropertyName == MaxColumnsProperty.PropertyName || e.PropertyName == TileHeightProperty.PropertyName)
+            {
+                BuildTiles();
+            }
+        }
+
+        private void GridView_PropertyChanging(object sender, PropertyChangingEventArgs e)
+        {
+            if (e.PropertyName == ItemsSourceProperty.PropertyName)
+            {
+                var items = ItemsSource as INotifyCollectionChanged;
+                if (items != null)
+                    items.CollectionChanged -= ItemsCollectionChanged;
+            }
+        }
+
+        private void ItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            BuildTiles();
+        }
+    }
+}
+
+Step 2: Create ViewModel class as bridge between CustomControl and View.
+using System.Collections.ObjectModel;
+using System.Windows.Input;
+using Xamarin.Forms;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
+namespace CustomGallery
+{
+    /// <summary>
+    /// Grid view view model.
+    /// </summary>
+    public class GridViewViewModel : INotifyPropertyChanged
+    {
+        public   ObservableCollection<GalleryClass> GalleryCollection; 
+        private int _maxColumns;
+        private ObservableCollection<GalleryClass> _parentModels; 
+        private float _tileHeight;
+ 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Raises the property changed.
+        /// </summary>
+        /// <param name="propertyname">Propertyname.</param>
+        private void RaisePropertyChanged([CallerMemberName] string propertyname = null)
+        {
+            if (PropertyChanged != null)
+            {
+                if (!string.IsNullOrEmpty(propertyname))
+                {
+                    PropertyChanged(this, new PropertyChangedEventArgs(propertyname));
+                }
+            }
+        }
+
+        public GridViewViewModel()
+        { 
+            _parentModels=new ObservableCollection<GalleryClass>(); 
+            ParentModels=new ObservableCollection<GalleryClass>(); 
+            ItemTapCommand = new Command<GalleryClass>(OnParentTapped);
+            MaxColumns = 2;
+            TileHeight = 100;
+        }
+
+        public ICommand ItemTapCommand { get; private set; }
+
+        public int MaxColumns
+        {
+            get { return _maxColumns; }
+            set
+            {  
+                _maxColumns = value; RaisePropertyChanged(); 
+            }
+        }
+
+        public ObservableCollection<GalleryClass> ParentModels
+        {
+            get { return _parentModels; }
+            set { _parentModels = value;
+                RaisePropertyChanged();  
+            }
+        }
+
+        public float TileHeight
+        {
+            get { return _tileHeight; }
+            set { _tileHeight = value; RaisePropertyChanged(); }
+        }
+
+        internal void LoadData()
+        {
+           // var galleryClass = _dbhelper.GetAllObjects<GalleryClass>();
+            if (Constants.GalleryCollection != null)
+            {
+                ParentModels = Constants.GalleryCollection;
+            }
+        }
+       
+        private void OnParentTapped(GalleryClass item)
+        {
+            Application.Current.MainPage.DisplayAlert(Constants.AppTitle, "Selected " + item.Title,"Ok");
+        }
+    }
+}
+
+
+Step 3: Create a view page. Here two screens are designed, one for browse and selecting the image and another one for displaying selected image in grid format with search option.
+HomePage.xaml with Grid control view and search bar.
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+    x:Class="CustomGallery.HomePage"
+    xmlns:controls="clr-namespace:CustomGallery;assembly=CustomGallery">
+    <ContentPage.Content>
+        <StackLayout BackgroundColor="White" Padding="20,0,20,20" VerticalOptions="StartAndExpand"> 
+          <Entry x:Name="SearchEntry" Placeholder="Search" Margin="0,10" WidthRequest="150"></Entry>
+            <StackLayout Orientation="Horizontal" HeightRequest="200" Margin="0,5">
+                <ScrollView  >
+                    <controls:GridView ColumnSpacing="10"
+                               ItemTappedCommand="{Binding ItemTapCommand}"
+                               ItemsSource="{Binding ParentModels}"
+                               MaxColumns="{Binding MaxColumns}"
+                               Padding="1"
+                               RowSpacing="1"
+                               TileHeight="{Binding TileHeight}"
+                        x:Name="customGrid">
+                        <controls:GridView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid BackgroundColor="Gray" Padding="2,0,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Image Source="{Binding Path}" WidthRequest="220" HeightRequest="170" Margin="0,4,0,0"/>
+                                    <Label Grid.Row="1" HorizontalOptions="CenterAndExpand" FontSize="Small"
+                                   Text="{Binding Title}"
+                                   TextColor="White" Margin="0,0,0,0" LineBreakMode="TailTruncation"/>
+                                </Grid>
+                            </DataTemplate>
+                        </controls:GridView.ItemTemplate>
+                    </controls:GridView>
+                </ScrollView>
+            </StackLayout>
+            <Button x:Name="UploadButton" Clicked="UploadClicked" VerticalOptions="EndAndExpand" BackgroundColor="Gray" TextColor="White" Text="Upload" />
+</StackLayout>
+    </ContentPage.Content>
+</ContentPage>
+
+
+Code behind class HomaPage.xaml.cs:
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq; 
+using Xamarin.Forms;
+using Xamarin.Forms.Xaml;
+
+namespace CustomGallery
+{
+    //[XamlCompilation(XamlCompilationOptions.Compile)]
+    public partial class HomePage : ContentPage
+    {
+         GridViewViewModel _viewModel;
+
+        public HomePage()
+        {
+            InitializeComponent();
+            Title = "Custom Gallery";
+            _viewModel = new GridViewViewModel();
+            this.BindingContext = _viewModel;
+            NavigationPage.SetHasBackButton(this,false);
+            Constants.GalleryCollection = new ObservableCollection<GalleryClass>();
+            SearchEntry.TextChanged += (sender, e) => SearchProjects(SearchEntry.Text);
+        }
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            _viewModel.LoadData();
+            if(Constants.GalleryCollection!=null && Constants.GalleryCollection.Count>0)
+             customGrid.ItemsSource = Constants.GalleryCollection;
+        }
+
+        void UploadClicked(object sender, System.EventArgs e)
+        {
+             Application.Current.MainPage.Navigation.PushAsync(new UploadImagePage());
+        }
+
+        public void SearchProjects(string filter)
+        {
+            if (string.IsNullOrWhiteSpace(filter))
+            {
+                _viewModel.ParentModels = Constants.GalleryCollection;
+            }
+            else
+            {
+                var collection= Constants.GalleryCollection;
+                //var _collection = Constants.GalleryCollection.Where(x => (x.Title.ToLower().Contains(filter.ToLower())));
+                var _collection = collection.Where(x => (x.Title.ToLower().Contains(filter.ToLower())));
+                _viewModel.ParentModels = new ObservableCollection<GalleryClass>(_collection);
+            }
+        }
+
+        protected override bool OnBackButtonPressed()
+        {
+            return base.OnBackButtonPressed();
+        }
+    }
+}
+
+UploadImagePage.xaml : For browsing image. 
+Plugin.Media nuget package is been used for browse and save the image  
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+    x:Class="CustomGallery.UploadImagePage">
+    <ContentPage.Content>
+         <StackLayout Orientation="Vertical" VerticalOptions="CenterAndExpand">
+  <Button x:Name="BrowseButton"  
+            BackgroundColor="Gray" 
+            TextColor="White" 
+            Text="Browse" 
+            HorizontalOptions="CenterAndExpand"  />
+  <Image x:Name="image" HeightRequest="100" WidthRequest="125" Source="xamarin_logo.png" /> 
+   <StackLayout Orientation="Vertical" HorizontalOptions="CenterAndExpand" Margin="0,10">
+       <Entry x:Name="TittleEntry" Placeholder="Title" WidthRequest="300"/> 
+       <Label x:Name="DateTimeEntry"   WidthRequest="200"/> 
+   </StackLayout>
+            
+ <Button x:Name="UploadButton" Margin="0,20" BackgroundColor="Gray" TextColor="White"
+            Text="Save" HorizontalOptions="CenterAndExpand" />
+ </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
+
+Code behind class: UploadImagePage.xaml.cs
+
+using System;
+using Xamarin.Forms;
+using Plugin.Media;
+
+namespace CustomGallery
+{
+    public partial class UploadImagePage : ContentPage
+    {
+        string _filePath;
+        public UploadImagePage()
+        {
+            InitializeComponent();
+            Title = Constants.AppUploadTitle;
+            DateTimeEntry.Text = DateTime.Now.ToString();
+            UploadButton.Clicked += async delegate
+             {
+                 if (string.IsNullOrEmpty(TittleEntry.Text))
+                 {
+                     await DisplayAlert(Constants.AppTitle, Constants.TitleRequired, Constants.Ok);
+                     return;
+                 }
+                 var gallery = new GalleryClass
+                 {
+                     Title = TittleEntry.Text,
+                     Path = _filePath,
+                     Created = DateTime.Now
+                 };
+                 Constants.GalleryCollection.Add(gallery); 
+                 await App.NavigationRef.PopAsync();
+             }; 
+            BrowseButton.Clicked += delegate
+            {
+                PickImage();
+            }; 
+        } 
+        async void PickImage()
+        {
+            if (!CrossMedia.Current.IsPickPhotoSupported)
+            {
+                await DisplayAlert(Constants.AppTitle, Constants.PermissionDenied, Constants.Ok);
+                return;
+            }
+            var file = await CrossMedia.Current.PickPhotoAsync(new Plugin.Media.Abstractions.PickMediaOptions
+            {
+                PhotoSize = Plugin.Media.Abstractions.PhotoSize.Medium
+            }); 
+            if (file == null)
+                return;
+            image.Source = file.Path;
+            _filePath = file.Path;
+        }
+    }
+}
