@@ -5,28 +5,28 @@
     xmlns:controls="clr-namespace:CustomGallery;assembly=CustomGallery">
     <ContentPage.Content>
         <StackLayout BackgroundColor="White" Padding="20,0,20,20" VerticalOptions="StartAndExpand"> 
-          <Entry x:Name="SearchEntry" Placeholder="Search" Margin="0,10" WidthRequest="150"></Entry>
-            <StackLayout Orientation="Horizontal" HeightRequest="200" Margin="0,5">
+          <Entry x:Name="SearchEntry" Placeholder="Search" Margin="0,5" WidthRequest="150"></Entry>
+            <StackLayout Orientation="Horizontal" HeightRequest="400" Margin="0,5">
                 <ScrollView  >
-                    <controls:GridView ColumnSpacing="10"
+                    <controls:GridView ColumnSpacing="5"
                                ItemTappedCommand="{Binding ItemTapCommand}"
                                ItemsSource="{Binding ParentModels}"
                                MaxColumns="{Binding MaxColumns}"
-                               Padding="1"
+                               Padding="1" 
                                RowSpacing="1"
                                TileHeight="{Binding TileHeight}"
                         x:Name="customGrid">
                         <controls:GridView.ItemTemplate>
                             <DataTemplate>
-                                <Grid BackgroundColor="Gray" Padding="2,0,0,0">
+                                <Grid BackgroundColor="White" Padding="1,0,0,0">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <Image Source="{Binding Path}" WidthRequest="220" HeightRequest="170" Margin="0,4,0,0"/>
-                                    <Label Grid.Row="1" HorizontalOptions="CenterAndExpand" FontSize="Small"
-                                   Text="{Binding Title}"
-                                   TextColor="White" Margin="0,0,0,0" LineBreakMode="TailTruncation"/>
+                                    <Image Source="{Binding Path}" HeightRequest="170" WidthRequest="220" Margin="0,4,0,0"/>
+                                    <Label Grid.Row="1" HorizontalOptions="CenterAndExpand" FontSize="10"
+                                   Text="{Binding Title}" 
+                                   TextColor="Black" Margin="0,0,0,0" LineBreakMode="TailTruncation"/>
                                 </Grid>
                             </DataTemplate>
                         </controls:GridView.ItemTemplate>

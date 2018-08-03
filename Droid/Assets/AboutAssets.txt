@@ -4,8 +4,9 @@ Breif: Implementation of Custom gallery control for xamarin form explained in a 
 
 [Image]
 
-Description: If you have a plan to display image in gallery or in grid format for your Xamarin.Form application then you are in right place.
-You should be able to do so in next 15-20 minutes :). This implements targets both android and iOS. Now quickly go through with steps
+Description: If you have a plan to display image in gallery or in grid format for your Xamarin.Form application then you are in right place now.
+You should be able to do so in next 15-20 minutes :). This implementation targets both android and iOS. Now quickly go through with steps.
+
 
 Step1: Create Custom control class for Gridview with some basic properties like MaxColumn, tile height, source, tapped event trigger and data template
 as follows,
@@ -21,9 +22,9 @@ using Xamarin.Forms;
 namespace CustomGallery
 { 
 
-    /// <summary>
+    /// &lt;summary&gt;
     /// GridView for showing control templates in a tile-like layout
-         /// </summary>
+         /// &lt;/summary&gt;
     public class GridView : Grid
     {
         public static readonly BindableProperty ItemsSourceProperty = BindableProperty.Create(nameof(ItemsSource), typeof(IList), typeof(GridView), default(IList), BindingMode.TwoWay);
@@ -71,7 +72,7 @@ namespace CustomGallery
         private void BuildColumns()
         {
             ColumnDefinitions.Clear();
-            for (var i = 0; i < MaxColumns; i++)
+            for (var i = 0; i &lt; MaxColumns; i++)
             {
                 ColumnDefinitions.Add(new ColumnDefinition());
             }
@@ -112,12 +113,12 @@ namespace CustomGallery
             if (tiles != null)
             {
                 var numberOfRows = Math.Ceiling(tiles.Count / (float)MaxColumns);
-                for (var i = 0; i < numberOfRows; i++)
+                for (var i = 0; i &lt; numberOfRows; i++)
                 {
                     RowDefinitions.Add(new RowDefinition { Height = 200f });
                 }
 
-                for (var index = 0; index < tiles.Count; index++)
+                for (var index = 0; index &lt; tiles.Count; index++)
                 {
                     var column = index % MaxColumns;
                     var row = (int)Math.Floor(index / (float)MaxColumns);
@@ -172,22 +173,22 @@ using System.Runtime.CompilerServices;
 
 namespace CustomGallery
 {
-    /// <summary>
+    /// &lt;summary&gt;
     /// Grid view view model.
-    /// </summary>
+    /// &lt;/summary&gt;
     public class GridViewViewModel : INotifyPropertyChanged
     {
-        public   ObservableCollection<GalleryClass> GalleryCollection; 
+        public   ObservableCollection&lt;GalleryClass&gt; GalleryCollection; 
         private int _maxColumns;
-        private ObservableCollection<GalleryClass> _parentModels; 
+        private ObservableCollection&lt;GalleryClass&gt; _parentModels; 
         private float _tileHeight;
  
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>
+        /// &lt;summary&gt;
         /// Raises the property changed.
-        /// </summary>
-        /// <param name="propertyname">Propertyname.</param>
+        /// &lt;/summary&gt;
+        /// &lt;param name="propertyname"&gt;Propertyname.&lt;/param&gt;
         private void RaisePropertyChanged([CallerMemberName] string propertyname = null)
         {
             if (PropertyChanged != null)
@@ -201,9 +202,9 @@ namespace CustomGallery
 
         public GridViewViewModel()
         { 
-            _parentModels=new ObservableCollection<GalleryClass>(); 
-            ParentModels=new ObservableCollection<GalleryClass>(); 
-            ItemTapCommand = new Command<GalleryClass>(OnParentTapped);
+            _parentModels=new ObservableCollection&lt;GalleryClass&gt;(); 
+            ParentModels=new ObservableCollection&lt;GalleryClass&gt;(); 
+            ItemTapCommand = new Command&lt;GalleryClass&gt;(OnParentTapped);
             MaxColumns = 2;
             TileHeight = 100;
         }
@@ -219,7 +220,7 @@ namespace CustomGallery
             }
         }
 
-        public ObservableCollection<GalleryClass> ParentModels
+        public ObservableCollection&lt;GalleryClass&gt; ParentModels
         {
             get { return _parentModels; }
             set { _parentModels = value;
@@ -235,7 +236,7 @@ namespace CustomGallery
 
         internal void LoadData()
         {
-           // var galleryClass = _dbhelper.GetAllObjects<GalleryClass>();
+           // var galleryClass = _dbhelper.GetAllObjects&lt;GalleryClass&gt;();
             if (Constants.GalleryCollection != null)
             {
                 ParentModels = Constants.GalleryCollection;
@@ -252,45 +253,45 @@ namespace CustomGallery
 
 Step 3: Create a view page. Here two screens are designed, one for browse and selecting the image and another one for displaying selected image in grid format with search option.
 HomePage.xaml with Grid control view and search bar.
-<?xml version="1.0" encoding="UTF-8"?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
     x:Class="CustomGallery.HomePage"
-    xmlns:controls="clr-namespace:CustomGallery;assembly=CustomGallery">
-    <ContentPage.Content>
-        <StackLayout BackgroundColor="White" Padding="20,0,20,20" VerticalOptions="StartAndExpand"> 
-          <Entry x:Name="SearchEntry" Placeholder="Search" Margin="0,10" WidthRequest="150"></Entry>
-            <StackLayout Orientation="Horizontal" HeightRequest="200" Margin="0,5">
-                <ScrollView  >
-                    <controls:GridView ColumnSpacing="10"
+    xmlns:controls="clr-namespace:CustomGallery;assembly=CustomGallery"&gt;
+    &lt;ContentPage.Content&gt;
+        &lt;StackLayout BackgroundColor="White" Padding="20,0,20,20" VerticalOptions="StartAndExpand"&gt; 
+          &lt;Entry x:Name="SearchEntry" Placeholder="Search" Margin="0,10" WidthRequest="150"&gt;&lt;/Entry&gt;
+            &lt;StackLayout Orientation="Horizontal" HeightRequest="200" Margin="0,5"&gt;
+                &lt;ScrollView  &gt;
+                    &lt;controls:GridView ColumnSpacing="10"
                                ItemTappedCommand="{Binding ItemTapCommand}"
                                ItemsSource="{Binding ParentModels}"
                                MaxColumns="{Binding MaxColumns}"
                                Padding="1"
                                RowSpacing="1"
                                TileHeight="{Binding TileHeight}"
-                        x:Name="customGrid">
-                        <controls:GridView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid BackgroundColor="Gray" Padding="2,0,0,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <Image Source="{Binding Path}" WidthRequest="220" HeightRequest="170" Margin="0,4,0,0"/>
-                                    <Label Grid.Row="1" HorizontalOptions="CenterAndExpand" FontSize="Small"
+                        x:Name="customGrid"&gt;
+                        &lt;controls:GridView.ItemTemplate&gt;
+                            &lt;DataTemplate&gt;
+                                &lt;Grid BackgroundColor="Gray" Padding="2,0,0,0"&gt;
+                                    &lt;Grid.RowDefinitions&gt;
+                                        &lt;RowDefinition Height="Auto" /&gt;
+                                        &lt;RowDefinition Height="Auto" /&gt;
+                                    &lt;/Grid.RowDefinitions&gt;
+                                    &lt;Image Source="{Binding Path}" WidthRequest="220" HeightRequest="170" Margin="0,4,0,0"/&gt;
+                                    &lt;Label Grid.Row="1" HorizontalOptions="CenterAndExpand" FontSize="Small"
                                    Text="{Binding Title}"
-                                   TextColor="White" Margin="0,0,0,0" LineBreakMode="TailTruncation"/>
-                                </Grid>
-                            </DataTemplate>
-                        </controls:GridView.ItemTemplate>
-                    </controls:GridView>
-                </ScrollView>
-            </StackLayout>
-            <Button x:Name="UploadButton" Clicked="UploadClicked" VerticalOptions="EndAndExpand" BackgroundColor="Gray" TextColor="White" Text="Upload" />
-</StackLayout>
-    </ContentPage.Content>
-</ContentPage>
+                                   TextColor="White" Margin="0,0,0,0" LineBreakMode="TailTruncation"/&gt;
+                                &lt;/Grid&gt;
+                            &lt;/DataTemplate&gt;
+                        &lt;/controls:GridView.ItemTemplate&gt;
+                    &lt;/controls:GridView&gt;
+                &lt;/ScrollView&gt;
+            &lt;/StackLayout&gt;
+            &lt;Button x:Name="UploadButton" Clicked="UploadClicked" VerticalOptions="EndAndExpand" BackgroundColor="Gray" TextColor="White" Text="Upload" /&gt;
+&lt;/StackLayout&gt;
+    &lt;/ContentPage.Content&gt;
+&lt;/ContentPage&gt;
 
 
 Code behind class HomaPage.xaml.cs:
@@ -315,14 +316,14 @@ namespace CustomGallery
             _viewModel = new GridViewViewModel();
             this.BindingContext = _viewModel;
             NavigationPage.SetHasBackButton(this,false);
-            Constants.GalleryCollection = new ObservableCollection<GalleryClass>();
-            SearchEntry.TextChanged += (sender, e) => SearchProjects(SearchEntry.Text);
+            Constants.GalleryCollection = new ObservableCollection&lt;GalleryClass&gt;();
+            SearchEntry.TextChanged += (sender, e) =&gt; SearchProjects(SearchEntry.Text);
         }
         protected override void OnAppearing()
         {
             base.OnAppearing();
             _viewModel.LoadData();
-            if(Constants.GalleryCollection!=null && Constants.GalleryCollection.Count>0)
+            if(Constants.GalleryCollection!=null && Constants.GalleryCollection.Count&gt;0)
              customGrid.ItemsSource = Constants.GalleryCollection;
         }
 
@@ -340,9 +341,9 @@ namespace CustomGallery
             else
             {
                 var collection= Constants.GalleryCollection;
-                //var _collection = Constants.GalleryCollection.Where(x => (x.Title.ToLower().Contains(filter.ToLower())));
-                var _collection = collection.Where(x => (x.Title.ToLower().Contains(filter.ToLower())));
-                _viewModel.ParentModels = new ObservableCollection<GalleryClass>(_collection);
+                //var _collection = Constants.GalleryCollection.Where(x =&gt; (x.Title.ToLower().Contains(filter.ToLower())));
+                var _collection = collection.Where(x =&gt; (x.Title.ToLower().Contains(filter.ToLower())));
+                _viewModel.ParentModels = new ObservableCollection&lt;GalleryClass&gt;(_collection);
             }
         }
 
@@ -355,28 +356,28 @@ namespace CustomGallery
 
 UploadImagePage.xaml : For browsing image. 
 Plugin.Media nuget package is been used for browse and save the image  
-<?xml version="1.0" encoding="UTF-8"?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
-    x:Class="CustomGallery.UploadImagePage">
-    <ContentPage.Content>
-         <StackLayout Orientation="Vertical" VerticalOptions="CenterAndExpand">
-  <Button x:Name="BrowseButton"  
+    x:Class="CustomGallery.UploadImagePage"&gt;
+    &lt;ContentPage.Content&gt;
+         &lt;StackLayout Orientation="Vertical" VerticalOptions="CenterAndExpand"&gt;
+  &lt;Button x:Name="BrowseButton"  
             BackgroundColor="Gray" 
             TextColor="White" 
             Text="Browse" 
-            HorizontalOptions="CenterAndExpand"  />
-  <Image x:Name="image" HeightRequest="100" WidthRequest="125" Source="xamarin_logo.png" /> 
-   <StackLayout Orientation="Vertical" HorizontalOptions="CenterAndExpand" Margin="0,10">
-       <Entry x:Name="TittleEntry" Placeholder="Title" WidthRequest="300"/> 
-       <Label x:Name="DateTimeEntry"   WidthRequest="200"/> 
-   </StackLayout>
+            HorizontalOptions="CenterAndExpand"  /&gt;
+  &lt;Image x:Name="image" HeightRequest="100" WidthRequest="125" Source="xamarin_logo.png" /&gt; 
+   &lt;StackLayout Orientation="Vertical" HorizontalOptions="CenterAndExpand" Margin="0,10"&gt;
+       &lt;Entry x:Name="TittleEntry" Placeholder="Title" WidthRequest="300"/&gt; 
+       &lt;Label x:Name="DateTimeEntry"   WidthRequest="200"/&gt; 
+   &lt;/StackLayout&gt;
             
- <Button x:Name="UploadButton" Margin="0,20" BackgroundColor="Gray" TextColor="White"
-            Text="Save" HorizontalOptions="CenterAndExpand" />
- </StackLayout>
-    </ContentPage.Content>
-</ContentPage>
+ &lt;Button x:Name="UploadButton" Margin="0,20" BackgroundColor="Gray" TextColor="White"
+            Text="Save" HorizontalOptions="CenterAndExpand" /&gt;
+ &lt;/StackLayout&gt;
+    &lt;/ContentPage.Content&gt;
+&lt;/ContentPage&gt;
 
 Code behind class: UploadImagePage.xaml.cs
 
